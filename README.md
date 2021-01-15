@@ -1,17 +1,18 @@
 ![Build](https://codebuild.eu-central-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoic3AwRG9wSVRVZ1hiaytvUVlTQVNQbEdNVDdyaDYzMkJZY3dRZGdzNDAzSUdVWUpQaXhzUkx2RjBQZ093cTQ3UEkvVW52Y3NCZ1dqYkU4UGtmL0JiUVRzPSIsIml2UGFyYW1ldGVyU3BlYyI6IjE3dUcyN0ZsR3FSZkMyTjkiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
 
-# SageMaker container for fine-tuning and serving of Transformer models
+# Fine-tuning and serving Transformer models on Sagemaker
 
 **Available task:** Text classification + Token classification (NER)
+
 **Tested on:** Bert, Distilbert, Longformer, LayoutLM
 
 ## Usage for Training
 
 ### Training data format
 
-To use the model, your training data should consist of 3 csv (with tab separator `\t`) files : `train.csv`, `dev.csv` and `test.csv` located in a directory on s3, each one having the same format.
+To use the model, your training data should consist of 3 tab separated (`\t`) csv files : `train.csv`, `dev.csv` and `test.csv` located in a directory on s3, each one having the same format.
 
-* For token classification task, the format should be:
+**For token classification task**
 
 | text        |  labels  |
 | ------------- |:-------------:|
@@ -21,9 +22,10 @@ To use the model, your training data should consist of 3 csv (with tab separator
 |...|...|
 
 > labels in this case are word labels (one label for each word). Words in text are separated by space. So in the example, "Hi," has label "O".
+
 > An example of these files can be found in the [tests](./tests/unit_tests/dataset_classif/)
 
-* For text classification:
+**For text classification**
 
 | text        |  labels  |
 | ------------- |:-------------:|
@@ -34,7 +36,7 @@ To use the model, your training data should consist of 3 csv (with tab separator
 
 > An example of these files can be found in the [tests](./tests/unit_tests/dataset_ner/)
 
-* Optionaly, you can add a column `bbox` (used by LayoutLM model) containing the coordinates of the word in the document.
+**Optionaly**, you can add a column `bbox` (used by LayoutLM model) containing the coordinates of the word in the document.
 
 | text        | bbox           | labels  |
 | ------------- |:-------------:| -----:|
@@ -47,3 +49,11 @@ To use the model, your training data should consist of 3 csv (with tab separator
 
 ### Hyperparameters
 
+You can provide SageMaker Hyperparameters to adapt the training parameters:
+
+* `task_name`: Either "ner", "classif", or "regression"
+* `model_name`: pretrained Transformer model to use (e.g. "bert-base-uncased", "allenai/longformer-base-4096", "microsoft/layoutlm-base-uncased")
+* `max_steps`: Number of training steps (e.g. "1000")
+* `use_bbox`: Whether to use the bbox column (if provided in training data). Should be "true" if LayoutLM.
+* `per_device_train_batch_size`: Batch size per GPU/CPU for training (e.g. "5")
+* `per_device_eval_batch_size`: Batch size per GPU/CPU for training (e.g. "5")
