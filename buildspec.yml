@@ -1,16 +1,25 @@
 version: 0.2
 
 phases:
+  install:
+    runtime-versions:
+        python: 3.8
+    commands:
+        - echo $(python --version)
+        - pip install -r requirements-test.txt
   pre_build:
     commands:
-      - echo If CPU repository doesn't exist, create it...
+      - echo If CPU/GPU repository doesn't exist, create it...
       - aws --region ${AWS_DEFAULT_REGION} ecr describe-repositories --repository-names "${IMAGE_REPO_NAME_CPU}" || aws --region ${AWS_DEFAULT_REGION} ecr create-repository --repository-name "${IMAGE_REPO_NAME_CPU}"
-      - echo If CPU repository doesn't exist, create it...
       - aws --region ${AWS_DEFAULT_REGION} ecr describe-repositories --repository-names "${IMAGE_REPO_NAME_CPU}" || aws --region ${AWS_DEFAULT_REGION} ecr create-repository --repository-name "${IMAGE_REPO_NAME_CPU}" 
       - echo Logging docker with Amazon ECR...
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
   build:
     commands:
+      - Run unit tests...
+      - python -m pytest tests/unit_tests -v -s -o log_cli=true -o log_cli_level="INFO"
+      - Run docker tests...
+      - python -m pytest tests/docker_test -v -s -o log_cli=true -o log_cli_level="INFO"
       - echo Building the CPU Docker image...
       - docker build -t $IMAGE_REPO_NAME_CPU:$IMAGE_TAG -f Dockerfile.cpu .
       - docker tag $IMAGE_REPO_NAME_CPU:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_CPU:$IMAGE_TAG      
