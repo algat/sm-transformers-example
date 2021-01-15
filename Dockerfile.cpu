@@ -8,7 +8,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends unixodbc-dev \
          build-essential \
          nginx \
          ca-certificates \
-         git \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip

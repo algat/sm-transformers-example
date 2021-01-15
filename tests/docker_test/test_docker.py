@@ -27,9 +27,12 @@ def docker_fixture():
         if os.path.exists(dirpath) and os.path.isdir(dirpath):
             shutil.rmtree(dirpath)
 
-def test_docker(docker_fixture):
+device_list = ["cpu" , "gpu"]
+
+@pytest.mark.parametrize("device", device_list)
+def test_docker(device, docker_fixture):
     # build the image
-    bashCommand = "docker build -t sm-transformer -f Dockerfile.cpu {}".format(REPO_ROOT)
+    bashCommand = "docker build -t sm-transformer -f Dockerfile.{} {}".format(device, REPO_ROOT)
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
     output, error = process.communicate()
     assert process.returncode == 0
