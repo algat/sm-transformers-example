@@ -1,7 +1,7 @@
 flask
 gevent
 gunicorn
--e git+https://github.com/huggingface/transformers.git@78cb670b1ad9c45c6a6f5179ea166808807d9e6a#egg=transformers
+transformers==4.2.1
 torch==1.7.1
 datasets==1.2.0
 seqeval==1.2.2
