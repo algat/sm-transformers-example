@@ -1,0 +1,8 @@
+{
+    "task_name": "ner",
+    "model_name": "bert-base-uncased",
+    "max_steps": "10",
+    "use_bbox": "false",
+    "per_device_train_batch_size": "5",
+    "per_device_eval_batch_size": "5"
+}

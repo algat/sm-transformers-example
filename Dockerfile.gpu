@@ -1,0 +1,45 @@
+FROM nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04
+
+# Inspired from fast-bert : https://github.com/kaushaltrivedi/fast-bert/blob/master/container/Dockerfile_gpu
+
+RUN apt-get -y update && apt-get install -y --no-install-recommends \
+         unixodbc-dev \
+         vim \
+         gcc \
+         g++ \
+         wget \
+         build-essential \
+         curl \
+         wget \
+         nginx \
+         ca-certificates \
+         python3.8 \
+         python3.8-dev \
+         python3-pip \
+         python3-setuptools \
+    && rm -rf /var/lib/apt/lists/*
+
+# update pip
+RUN python3.8 -m pip install pip --upgrade
+RUN python3.8 -m pip install wheel
+
+# symlink python with python 3.8
+RUN ln -s /usr/bin/python3.8 /usr/bin/python
+RUN which python
+RUN python --version
+RUN pip --version
+
+COPY requirements.txt /
+RUN pip install -r requirements.txt && \
+        rm -rf /root/.cache
+
+ENV PYTHONUNBUFFERED=TRUE
+ENV PYTHONDONTWRITEBYTECODE=TRUE
+ENV PATH="/opt/program:${PATH}"
+
+WORKDIR /opt/program
+
+COPY container /opt/program
+
+RUN chmod +x train
+RUN chmod +x serve
