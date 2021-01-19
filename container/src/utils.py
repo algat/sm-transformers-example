@@ -97,7 +97,7 @@ def preprocess_dataset(examples,
                     label_ids.append(label_to_id[label[word_idx]] if label_all_tokens else -100)
                 previous_word_idx = word_idx
             label_id_lists.append(label_ids)
-        tokenized_words["label"] = label_id_lists
+        tokenized_words["labels"] = label_id_lists
     elif task_name == "regression":
         if label_column_name in examples:
             label_lists = [float(l) for l in examples[label_column_name]]
