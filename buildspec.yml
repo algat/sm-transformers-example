@@ -22,7 +22,7 @@ phases:
       - echo "Building the CPU/GPU Docker image..."
       - docker build -t $IMAGE_REPO_NAME_CPU:$IMAGE_TAG -f Dockerfile.cpu .
       - docker tag $IMAGE_REPO_NAME_CPU:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_CPU:$IMAGE_TAG     
-      - docker build -t $IMAGE_REPO_NAME_GPU:$IMAGE_TAG -f Dockerfile.cpu .
+      - docker build -t $IMAGE_REPO_NAME_GPU:$IMAGE_TAG -f Dockerfile.gpu .
       - docker tag $IMAGE_REPO_NAME_GPU:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_GPU:$IMAGE_TAG      
   post_build:
     commands:

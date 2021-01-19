@@ -13,7 +13,7 @@ class MultilabelClassificationTrainer(Trainer):
         outputs = model(**inputs)
         logits = outputs[0]
         loss_fct = BCEWithLogitsLoss()
-        loss = loss_fct(logits.view(-1, 3), labels.view(-1, 3))
+        loss = loss_fct(logits, labels)
         return loss
     
     def prediction_step(
@@ -37,11 +37,11 @@ class MultilabelClassificationTrainer(Trainer):
                     with autocast():
                         outputs = model(**inputs)
                 else:
-                    outputs = model(**inputs) 
+                    outputs = model(**inputs)
                 logits = outputs[0]
                 if has_labels:
                     loss_fct = BCEWithLogitsLoss()
-                    loss = loss_fct(logits.view(-1, 3), labels.view(-1, 3))
+                    loss = loss_fct(logits, labels)
                 else:
                     loss = None
                 # TODO: this needs to be fixed and made cleaner later.
