@@ -263,7 +263,7 @@ def train():
             else:
                 raise ValueError("model_name should be in list:{}".format(MODELS_LIST))
 
-        TASK_NAMES = ["ner", "classif", "regression"]
+        TASK_NAMES = ["ner", "classif", "multilabel-classif", "regression"]
         if "task_name" in sm_hyperparameters and sm_hyperparameters["task_name"] in TASK_NAMES:
             dict_args["task_name"] = sm_hyperparameters["task_name"]
         else:

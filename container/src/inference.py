@@ -16,6 +16,7 @@ from transformers import (
 )
 
 from .utils import preprocess_dataset
+from .multilabel_trainer import MultilabelClassificationTrainer
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -73,13 +74,20 @@ class ScoringService(object):
                     data_collator = None # will default to DataCollatorWithPadding
 
             # set trainer (only used for prediction though)
-            trainer = Trainer(
-                model=model,
-                args=training_args,
-                tokenizer=tokenizer,
-                data_collator=data_collator,
-            )
-            
+            if data_args["task_name"] != "multilabel-classif":
+                trainer = Trainer(
+                    model=model,
+                    args=training_args,
+                    tokenizer=tokenizer,
+                    data_collator=data_collator,
+                )
+            else:
+                trainer = MultilabelClassificationTrainer(
+                    model=model,
+                    args=training_args,
+                    tokenizer=tokenizer,
+                    data_collator=data_collator,
+                )
             cls.model = trainer
             cls.config = config
             cls.data_args = data_args
@@ -107,6 +115,7 @@ class ScoringService(object):
                                         "max_length" if data_args["pad_to_max_length"] else False, 
                                         data_args["use_bbox"],
                                         data_args["task_name"]),
+            #remove_columns=[label_column_name], #todo: check if label_column_name in dataset before removing it
             batched=True,
             num_proc=data_args["preprocessing_num_workers"],
             load_from_cache_file=not data_args["overwrite_cache"],
@@ -120,6 +129,10 @@ class ScoringService(object):
         predictions, labels, _ = trainer.predict(tokenized_datasets, metric_key_prefix="pred")
         if data_args["task_name"] == "classif":
             true_predictions = [config.id2label[p] for p in np.argmax(predictions, axis=1)]
+        elif data_args["task_name"] == "multilabel-classif":
+            predictions = 1/(1 + np.exp(-predictions)) # sigmoid
+            predictions = (predictions > 0.5) # threshold
+            true_predictions = [[config.id2label[i] for i in np.where(p == 1)[0]] for p in predictions]
         elif data_args["task_name"] == "regression":
             true_predictions = np.squeeze(predictions)
         elif data_args["task_name"] == "ner":

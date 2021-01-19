@@ -2,9 +2,11 @@
 
 # Fine-tuning and serving Transformer models on Sagemaker
 
-**Available task:** Text classification + Token classification (NER)
+**Available task:** Text classification (multiclass & multilabel), Token classification (NER)
 
-**Tested on:** Bert, Distilbert, Longformer, LayoutLM
+**Tested on:** Bert, Distilbert, Longformer, LayoutLM\*
+
+\* <sup>LayoutLM is only available for Token classification</sup>
 
 ## Usage for Training
 
@@ -22,10 +24,9 @@ To use the model, your training data should consist of 3 tab separated (`\t`) cs
 |...|...|
 
 > labels in this case are word labels (one label for each word). Words in text are separated by space. So in the example, "Hi," has label "O".
+> An example of these files can be found in the [tests](./tests/unit_tests/test_data/dataset_classif/)
 
-> An example of these files can be found in the [tests](./tests/unit_tests/dataset_classif/)
-
-**For text classification**
+**For text classification (Multiclass)**
 
 | text        |  labels  |
 | ------------- |:-------------:|
@@ -34,9 +35,20 @@ To use the model, your training data should consist of 3 tab separated (`\t`) cs
 | Quisque justo | "category2" |
 |...|...|...|
 
-> An example of these files can be found in the [tests](./tests/unit_tests/dataset_ner/)
+> An example of these files can be found in the [tests](./tests/unit_tests/test_data/dataset_ner/)
 
-**Optionaly**, you can add a column `bbox` (used by LayoutLM model) containing the coordinates of the word in the document.
+**For text classification (Multilabel)**
+
+| text        |  labels  |
+| ------------- |:-------------:|
+| Hi, I am Rev. And? | "My category","other" |
+| Lorem ipsum dolor sit amet, | "other" |
+| Quisque justo | "category2","My category" |
+|...|...|...|
+
+> An example of these files can be found in the [tests](./tests/unit_tests/test_data/dataset_multilabel_classif/)
+
+**Optionaly for LayoutLM**, you can add a column `bbox` containing the coordinates of the word in the document.
 
 | text        | bbox           | labels  |
 | ------------- |:-------------:| -----:|
@@ -51,7 +63,7 @@ To use the model, your training data should consist of 3 tab separated (`\t`) cs
 
 You can provide SageMaker Hyperparameters to adapt the training parameters:
 
-* `task_name`: Either "ner", "classif", or "regression"
+* `task_name`: Either "ner", "classif", "multilabel-classif" or "regression"
 * `model_name`: pretrained Transformer model to use (e.g. "bert-base-uncased", "allenai/longformer-base-4096", "microsoft/layoutlm-base-uncased")
 * `max_steps`: Number of training steps (e.g. "1000")
 * `use_bbox`: Whether to use the bbox column (if provided in training data). Should be "true" if LayoutLM.

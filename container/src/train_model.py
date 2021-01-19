@@ -24,6 +24,7 @@ from transformers import (
 from transformers.trainer_utils import is_main_process
 
 from .utils import get_label_info, preprocess_dataset, compute_metrics
+from .multilabel_trainer import MultilabelClassificationTrainer
 logger = logging.getLogger(__name__)
 
 
@@ -246,6 +247,7 @@ def train_model(dict_args):
                                     padding, 
                                     use_bbox,
                                     data_args.task_name),
+        remove_columns=[label_column_name],
         batched=True,
         num_proc=data_args.preprocessing_num_workers,
         load_from_cache_file=not data_args.overwrite_cache,
@@ -267,15 +269,26 @@ def train_model(dict_args):
     logger.info("Data Collator used %s", data_collator)
 
     # Initialize our Trainer
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        train_dataset=tokenized_datasets["train"] if training_args.do_train else None,
-        eval_dataset=tokenized_datasets["validation"] if training_args.do_eval else None,
-        tokenizer=tokenizer,
-        data_collator=data_collator,
-        compute_metrics=lambda x: compute_metrics(x, id_to_label, data_args.task_name),
-    )
+    if data_args.task_name != "multilabel-classif":
+        trainer = Trainer(
+            model=model,
+            args=training_args,
+            train_dataset=tokenized_datasets["train"] if training_args.do_train else None,
+            eval_dataset=tokenized_datasets["validation"] if training_args.do_eval else None,
+            tokenizer=tokenizer,
+            data_collator=data_collator,
+            compute_metrics=lambda x: compute_metrics(x, id_to_label, data_args.task_name),
+        )
+    else:
+        trainer = MultilabelClassificationTrainer(
+            model=model,
+            args=training_args,
+            train_dataset=tokenized_datasets["train"] if training_args.do_train else None,
+            eval_dataset=tokenized_datasets["validation"] if training_args.do_eval else None,
+            tokenizer=tokenizer,
+            data_collator=data_collator,
+            compute_metrics=lambda x: compute_metrics(x, id_to_label, data_args.task_name),
+        )
 
     # Training
     if training_args.do_train:
@@ -317,6 +330,10 @@ def train_model(dict_args):
         predictions, labels, metrics = trainer.predict(test_dataset, metric_key_prefix="test")
         if data_args.task_name == "classif":
             true_predictions = [id_to_label[p] for p in np.argmax(predictions, axis=1)]
+        elif data_args.task_name == "multilabel-classif":
+            predictions = 1/(1 + np.exp(-predictions)) # sigmoid
+            predictions = (predictions > 0.5) # threshold
+            true_predictions = [[id_to_label[i] for i in np.where(p == 1)[0]] for p in predictions]
         elif data_args.task_name == "regression":
             true_predictions = np.squeeze(predictions)
         elif data_args.task_name == "ner":

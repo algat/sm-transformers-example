@@ -18,6 +18,12 @@ def get_label_info(labels: List, task_name: str):
         label_to_id = {l: i for i, l in enumerate(label_list)}
         id_to_label = {i: l for i, l in enumerate(label_list)}
         num_labels = len(label_list)
+    elif task_name == "multilabel-classif":
+        label_list = list(set([l.strip() for multilabel in labels for l in multilabel.split(",")]))
+        label_list.sort()
+        label_to_id = {l: i for i, l in enumerate(label_list)}
+        id_to_label = {i: l for i, l in enumerate(label_list)}
+        num_labels = len(label_list)
     elif task_name == "ner":
         unique_labels = set()
         for label in labels:
@@ -56,7 +62,15 @@ def preprocess_dataset(examples,
         else:
             dummy_label_id = list(label_to_id.values())[0]
             label_id_lists = [dummy_label_id for _ in word_lists]
-        tokenized_words["labels"] = label_id_lists
+        tokenized_words["label"] = label_id_lists
+    elif task_name == "multilabel-classif":
+        if label_column_name in examples:
+            label_id_lists = [[label_to_id[l.strip()] for l in label.split(",")] for label in examples[label_column_name]]
+            one_hot_label_id_lists = [[1.0 if k in l else 0.0 for k in range(len(label_to_id))] for l in label_id_lists]
+        else:
+            dummy_one_hot_label_id = [0.0] * len(label_to_id)
+            one_hot_label_id_lists = [dummy_one_hot_label_id for _ in word_lists]
+        tokenized_words["label_ids"] = one_hot_label_id_lists
     elif task_name == "ner":
         if label_column_name in examples:
             label_lists = [label.split() for label in examples[label_column_name]]
@@ -83,13 +97,13 @@ def preprocess_dataset(examples,
                     label_ids.append(label_to_id[label[word_idx]] if label_all_tokens else -100)
                 previous_word_idx = word_idx
             label_id_lists.append(label_ids)
-        tokenized_words["labels"] = label_id_lists
+        tokenized_words["label"] = label_id_lists
     elif task_name == "regression":
         if label_column_name in examples:
             label_lists = [float(l) for l in examples[label_column_name]]
         else:
             label_lists = [0 for _ in word_lists]
-        tokenized_words["labels"] = label_lists
+        tokenized_words["label"] = label_lists
     
     # Handle bboxes
     if use_bbox and bbox_column_name in examples:
@@ -148,6 +162,16 @@ def compute_metrics_regression(p: EvalPrediction):
     return {"mse": ((predictions - labels) ** 2).mean().item()}
 
 
+def compute_metrics_multilabel_classif(p: EvalPrediction):
+    predictions, labels = p
+    predictions = 1/(1 + np.exp(-predictions)) # sigmoid
+    predictions = (predictions > 0.5) # threshold
+    accuracy = (predictions == labels).astype(np.float32).mean().item()
+    # Maybe better : from sklearn.metrics import accuracy_score
+    # accuracy = accuracy_score(labels, true_predictions)
+    return {"accuracy": accuracy}
+
+
 def compute_metrics_classif(p: EvalPrediction):
     predictions, labels = p
     predictions = np.argmax(predictions, axis=1)
@@ -159,5 +183,7 @@ def compute_metrics(p, id_to_label, task_name: str):
         return compute_metrics_regression(p)
     elif task_name == "classif":
         return compute_metrics_classif(p)
+    elif task_name == "multilabel-classif":
+        return compute_metrics_multilabel_classif(p)
     elif task_name == "ner":
         return compute_metrics_ner(p, id_to_label)
