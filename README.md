@@ -69,3 +69,10 @@ You can provide SageMaker Hyperparameters to adapt the training parameters:
 * `use_bbox`: Whether to use the bbox column (if provided in training data). Should be "true" if LayoutLM.
 * `per_device_train_batch_size`: Batch size per GPU/CPU for training (e.g. "5")
 * `per_device_eval_batch_size`: Batch size per GPU/CPU for training (e.g. "5")
+
+**NB:** Recommended hyperparameters when using GPU instance `ml.g4dn.xlarge` or `ml.g4dn.2xlarge` (one T4 gpu with 16 GB ram):
+
+| &nbsp; | `per_device_train_batch_size` / `per_device_eval_batch_size` |
+| ------------- |:-------------:|
+| Bert, Distilbert, LayoutLM |  10 |
+| Longformer |  1 |
