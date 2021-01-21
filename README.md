@@ -76,3 +76,19 @@ You can provide SageMaker Hyperparameters to adapt the training parameters:
 | ------------- |:-------------:|
 | Bert, Distilbert, LayoutLM |  10 |
 | Longformer |  1 |
+
+## Running tests
+
+Unit tests: 
+
+```python
+python -m pytest tests/unit_tests -v -s -o log_cli=true -o log_cli_level="INFO"
+```
+
+Docker tests:
+
+```python
+python -m pytest tests/docker_test -v -s -o log_cli=true -o log_cli_level="INFO"
+```
+
+**NB:** The first run of the tests will take more time than the subsequent ones since some pre-trained models will be downloaded.
