@@ -1,7 +1,5 @@
 import logging
 from typing import List
-
-from seqeval.metrics import accuracy_score, f1_score, precision_score, recall_score
 import numpy as np
 from transformers import EvalPrediction
 
@@ -138,7 +136,6 @@ def preprocess_dataset(examples,
 def compute_metrics_ner(p: EvalPrediction, id_to_label):
     predictions, labels = p
     predictions = np.argmax(predictions, axis=2)
-
     # Remove ignored index (special tokens)
     true_predictions = [
         [id_to_label[p] for (p, l) in zip(prediction, label) if l != -100]
@@ -148,13 +145,23 @@ def compute_metrics_ner(p: EvalPrediction, id_to_label):
         [id_to_label[l] for (p, l) in zip(prediction, label) if l != -100]
         for prediction, label in zip(predictions, labels)
     ]
+    
+    from seqeval.metrics import accuracy_score, f1_score, precision_score, recall_score, classification_report
+    report = classification_report(true_labels, true_predictions, output_dict=True)
     return {
         "accuracy_score": accuracy_score(true_labels, true_predictions),
         "precision": precision_score(true_labels, true_predictions),
         "recall": recall_score(true_labels, true_predictions),
         "f1": f1_score(true_labels, true_predictions),
-    }
-
+        "macro_precision":report["macro avg"]["precision"],
+        "macro_recall":report["macro avg"]["recall"],
+        "macro_f1":report["macro avg"]["f1-score"],
+        "micro_precision":report["micro avg"]["precision"],
+        "micro_recall":report["micro avg"]["recall"],
+        "micro_f1":report["micro avg"]["f1-score"],
+        "weighted_precision":report["weighted avg"]["precision"],
+        "weighted_recall":report["weighted avg"]["recall"],
+        "weighted_f1":report["weighted avg"]["f1-score"]}
 
 def compute_metrics_regression(p: EvalPrediction):
     predictions, labels = p
@@ -166,16 +173,37 @@ def compute_metrics_multilabel_classif(p: EvalPrediction):
     predictions, labels = p
     predictions = 1/(1 + np.exp(-predictions)) # sigmoid
     predictions = (predictions > 0.5) # threshold
-    accuracy = (predictions == labels).astype(np.float32).mean().item()
-    # Maybe better : from sklearn.metrics import accuracy_score
-    # accuracy = accuracy_score(labels, true_predictions)
-    return {"accuracy": accuracy}
+    
+    from sklearn.metrics import accuracy_score, classification_report
+    accuracy_hard = accuracy_score(labels, predictions)
+    accuracy_soft = (predictions == labels).astype(np.float32).mean().item()
+    report = classification_report(labels, predictions, output_dict=True)
+    return {"accuracy_hard": accuracy_hard,
+            "accuracy_soft": accuracy_soft,
+            "macro_precision": report["macro avg"]["precision"],
+            "macro_recall": report["macro avg"]["recall"],
+            "macro_f1": report["macro avg"]["f1-score"],
+            "micro_precision": report["micro avg"]["precision"],
+            "micro_recall": report["micro avg"]["recall"],
+            "micro_f1": report["micro avg"]["f1-score"],
+            "weighted_precision": report["weighted avg"]["precision"],
+            "weighted_recall": report["weighted avg"]["recall"],
+            "weighted_f1": report["weighted avg"]["f1-score"]}
 
 
 def compute_metrics_classif(p: EvalPrediction):
     predictions, labels = p
     predictions = np.argmax(predictions, axis=1)
-    return {"accuracy": (predictions == labels).astype(np.float32).mean().item()}
+
+    from sklearn.metrics import classification_report
+    report = classification_report(labels, predictions, output_dict=True)
+    return {"accuracy": report["accuracy"],
+            "macro_precision": report["macro avg"]["precision"],
+            "macro_recall": report["macro avg"]["recall"],
+            "macro_f1": report["macro avg"]["f1-score"],
+            "weighted_precision": report["weighted avg"]["precision"],
+            "weighted_recall": report["weighted avg"]["recall"],
+            "weighted_f1": report["weighted avg"]["f1-score"]}
 
 
 def compute_metrics(p, id_to_label, task_name: str):

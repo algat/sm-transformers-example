@@ -123,7 +123,7 @@ distilbert_args = {'output_dir': CHECKPOINT_DIR,
             'use_bbox': False,
             'sagemaker_output_path': OUTPUT_MODEL_DIR}
 
-args_list = [bert_args, layoutlm_args, longformer_args, distilbert_args]
+args_list = [bert_args]#, layoutlm_args, longformer_args, distilbert_args]
 
 
 @pytest.mark.parametrize("args", args_list)
@@ -133,7 +133,7 @@ def test_training(args, teardown_cleaning):
     result = train_model(args)
     
     keys = ['eval_loss', 'eval_accuracy_score', 'eval_precision', 'eval_recall', 'eval_f1', 'eval_runtime', 'eval_samples_per_second', 'epoch']
-    assert all(r in keys for r in result)
+    assert all(k in result for k in keys)
 
     # check args files saved
     assert os.path.isfile(os.path.join(OUTPUT_MODEL_DIR, "model_args.bin"))
