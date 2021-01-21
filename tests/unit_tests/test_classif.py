@@ -98,14 +98,14 @@ distilbert_args = {'output_dir': CHECKPOINT_DIR,
             'use_bbox': False,
             'sagemaker_output_path': OUTPUT_MODEL_DIR}
 
-args_list = [bert_args ]#, longformer_args, distilbert_args]
+args_list = [bert_args , longformer_args, distilbert_args]
 
 @pytest.mark.parametrize("args", args_list)
 def test_training(args, teardown_cleaning):
     # test training
     from container.src.train_model import train_model
     result = train_model(args)
-    
+
     keys = ['eval_loss', 'eval_accuracy', 'eval_runtime', 'eval_samples_per_second', 'epoch']
     assert all(k in result for k in keys)
 

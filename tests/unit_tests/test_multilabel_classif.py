@@ -98,7 +98,7 @@ distilbert_args = {'output_dir': CHECKPOINT_DIR,
             'use_bbox': False,
             'sagemaker_output_path': OUTPUT_MODEL_DIR}
 
-args_list = [bert_args]# , longformer_args, distilbert_args]
+args_list = [bert_args , longformer_args, distilbert_args]
 
 @pytest.mark.parametrize("args", args_list)
 def test_training(args, teardown_cleaning):
