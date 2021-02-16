@@ -147,8 +147,8 @@ class ScoringService(object):
 
         logger.info("true_predictions %s", true_predictions)
         result = {}
-        if true_predictions:
+        if true_predictions is not None:
             result["pred"] = true_predictions
-        if probas:
+        if probas is not None
             result["proba"] = probas
         return result
