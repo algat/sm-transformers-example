@@ -1,6 +1,7 @@
 import os
 import logging
 import numpy as np
+from scipy.special import softmax
 import torch
 
 from datasets import Dataset
@@ -126,9 +127,11 @@ class ScoringService(object):
         
         # Get predictions
         true_predictions = None
+        probas = None
         predictions, labels, _ = trainer.predict(tokenized_datasets, metric_key_prefix="pred")
         if data_args["task_name"] == "classif":
             true_predictions = [config.id2label[p] for p in np.argmax(predictions, axis=1)]
+            probas = np.amax(softmax(predictions, axis=1), axis=1).tolist()
         elif data_args["task_name"] == "multilabel-classif":
             predictions = 1/(1 + np.exp(-predictions)) # sigmoid
             predictions = (predictions > 0.5) # threshold
@@ -142,4 +145,4 @@ class ScoringService(object):
                 for prediction, label in zip(predictions, labels)
             ]
         logger.info("true_predictions %s", true_predictions)
-        return true_predictions
+        return true_predictions, probas

@@ -55,9 +55,12 @@ def transformation():
     #            'bbox': ["12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40", "12 34 87 40, 12 34 87 40, 12 34 87 40",
     #                    "12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40"]}
     # Do the prediction
-    output = ScoringService.predict(model_path, data)
+    predictions, probas = ScoringService.predict(model_path, data)
 
     # Return json response with prediction
-    result = {"predictions": output}
+    result = {"predictions": predictions}
+    if probas:
+        result["probas"] = probas
+
     response = json.dumps(result)
     return flask.Response(response=response, status=200, mimetype='application/json')
