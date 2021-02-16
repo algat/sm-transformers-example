@@ -149,6 +149,6 @@ class ScoringService(object):
         result = {}
         if true_predictions is not None:
             result["pred"] = true_predictions
-        if probas is not None
+        if probas is not None:
             result["proba"] = probas
         return result
