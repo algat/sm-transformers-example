@@ -144,5 +144,11 @@ class ScoringService(object):
                 [config.id2label[p] for (p, l) in zip(prediction, label) if l != -100]
                 for prediction, label in zip(predictions, labels)
             ]
+
         logger.info("true_predictions %s", true_predictions)
-        return true_predictions, probas
+        result = {}
+        if true_predictions:
+            result["pred"] = true_predictions
+        if probas:
+            result["proba"] = probas
+        return result

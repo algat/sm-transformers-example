@@ -138,7 +138,8 @@ def test_training(args, teardown_cleaning):
     input = {'text': ['hello I am ALexis', "how are you", "are you doing fine??"],
            'bbox': ["12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40", "12 34 87 40, 12 34 87 40, 12 34 87 40",
                    "12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40"]}
-    preds, probas = ScoringService.predict(OUTPUT_MODEL_DIR, input)
-    assert len(preds) == len(input["text"])
-    assert len(probas) == len(input["text"])
-    assert all(0 <= p <= 1 for p in probas)
+    result = ScoringService.predict(OUTPUT_MODEL_DIR, input)
+    #result = {"pred": [], "proba":[]}
+    assert len(result["pred"]) == len(input["text"])
+    assert len(result["proba"]) == len(input["text"])
+    assert all(0 <= p <= 1 for p in result["proba"])

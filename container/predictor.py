@@ -29,38 +29,51 @@ def ping():
 
 @app.route('/invocations', methods=['POST'])
 def transformation():
-    """Do an inference on a SINGLE sample data, though the text can be long :) 
-    Formats allowed are text/plain text and application/json.
+    """Do an inference on a sample data
+    Formats allowed are application/json text and application/jsonlines.
     Input
-        - plain text: "Hello I want a NER prediction"
-        - application/json: {"text": "Hello I want a NER prediction"}
+        - application/json: 
+                {"data":[{'text': 'hello I am Alexis'}, 
+                        {'text': "how are you"},
+                        {'text': "are you doing fine??"}]}
+        - application/jsonlines: 
+                {'text': 'hello I am Alexis'}\n
+                {'text': "how are you"}\n
+                {'text': "are you doing fine??"}
     Output
-        - application/json: {'result': 'Hello O\nI O\nwant O\na O\nNER O\nprediction O\n'}
-    """
-    text = None
-    data = None
+        - application/json:
+                {"predictions":[{'pred': 'Class1',"proba":0.3},
+                            {'pred': 'Class2',"proba":0.6}]}
+        - application/jsonlines:
+                {'pred': 'Class1',"proba":0.3}\n
+                {'pred': 'Class2',"proba":0.6}
 
-    # Parse input data based on content-type received
-    #if flask.request.content_type == 'text/plain':
-    #    text = flask.request.data.decode('utf-8')
+    """
+    data = None
     if flask.request.content_type == 'application/json':
         query_data = flask.request.data.decode('utf-8')
-        data = json.loads(query_data, encoding='utf-8')
-        #text = data["text"]
+        query_dict = json.loads(query_data, encoding='utf-8')
+        data = query_dict["data"]
+    elif flask.request.content_type == 'application/jsonlines':
+        query_data = flask.request.data.decode('utf-8')
+        data = [json.loads(jline) for jline in query_data.splitlines()]
     else:
-        return flask.Response(response='This predictor only supports text or json data', status=415, mimetype='application/json')
+        return flask.Response(response='This predictor only supports json data', status=415, mimetype='application/json')
 
-    print("data received: {}".format(data))
-    #input = {'text': ['hello I am ALexis', "how are you", "are you doing fine??"],
-    #            'bbox': ["12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40", "12 34 87 40, 12 34 87 40, 12 34 87 40",
-    #                    "12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40"]}
-    # Do the prediction
-    predictions, probas = ScoringService.predict(model_path, data)
+    # convert to dict of lists to list of dicts
+    dict_of_lists = {k: [dic[k] for dic in data] for k in data[0]}
 
-    # Return json response with prediction
-    result = {"predictions": predictions}
-    if probas:
-        result["probas"] = probas
+    result = ScoringService.predict(model_path, dict_of_lists)
 
-    response = json.dumps(result)
-    return flask.Response(response=response, status=200, mimetype='application/json')
+    # convert to list of dicts to dict of lists
+    list_of_dict = [dict(zip(result,t)) for t in zip(*result.values())]
+
+    # Send response
+    if flask.request.accept_mimetypes['application/json']: # by default it returns json
+        response = json.dumps({"predictions": list_of_dict})
+        return flask.Response(response=response, status=200, mimetype='application/json')
+    elif flask.request.accept_mimetypes['application/jsonlines']:
+        response = "\n".join([json.dumps(l) for l in list_of_dict])
+        return flask.Response(response=response, status=200, mimetype="application/jsonlines")
+    else:
+        return flask.Response(response='Accept mimetype not supported', status=415, mimetype='application/json')

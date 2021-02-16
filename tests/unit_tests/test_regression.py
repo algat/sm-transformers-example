@@ -138,7 +138,7 @@ def test_training(args, teardown_cleaning):
     input = {'text': ['hello I am ALexis', "how are you", "are you doing fine??"],
            'bbox': ["12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40", "12 34 87 40, 12 34 87 40, 12 34 87 40",
                    "12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40"]}
-    preds, probas = ScoringService.predict(OUTPUT_MODEL_DIR, input)
-    print("preds", preds)
-    assert len(preds) == len(input["text"])
-    assert not probas
+    result = ScoringService.predict(OUTPUT_MODEL_DIR, input)
+    assert len(result["pred"]) == len(input["text"])
+    assert not ("proba" in result)
+    

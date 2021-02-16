@@ -75,17 +75,42 @@ def test_docker(device, docker_fixture):
     r = requests.get(url = 'http://localhost:8080/ping')
     assert r.status_code == 200
 
-    # check prediction invocation
-    input_data = {'text': ['hello I am ALexis', "how are you", "are you doing fine??"],
-                'bbox': ["12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40", "12 34 87 40, 12 34 87 40, 12 34 87 40",
-                        "12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40"]}
+    # check prediction invocation on JSON input and JSON output
+    data = {"data":[{'text': 'hello I am Alexis',"bbox": "12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40"}, 
+                    {'text': "how are you","bbox": "12 34 87 40, 12 34 87 40, 12 34 87 40"},
+                    {'text': "are you doing fine??","bbox": "12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40"}]}
+    query_body = json.dumps(data)
     r = requests.post(url = 'http://localhost:8080/invocations',
-                data = json.dumps(input_data),
+                data = query_body,
                 headers = {'Content-Type': 'application/json'})
     assert r.status_code == 200
     result = r.json()
     assert "predictions" in result
-    assert len(result["predictions"]) == len(input_data["text"])
+    assert len(result["predictions"]) == len(data["data"])
+    assert all(("pred" in r) for r in result["predictions"])
+
+    # With JSON input and JSONLINES output
+    r = requests.post(url = 'http://localhost:8080/invocations',
+                data = query_body,
+                headers = {'Content-Type': 'application/json', 'Accept': 'application/jsonlines'})
+    assert r.status_code == 200
+    result_list = [json.loads(a) for a in r.content.split(b'\n')]
+    assert len(result_list) == len(data["data"])
+    assert all(("pred" in r) for r in result["predictions"])
+
+    # With JSONLINES input and JSON output
+    data = [{'text': 'hello I am Alexis', "bbox": "12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40"}, 
+            {'text': "how are you", "bbox": "12 34 87 40, 12 34 87 40, 12 34 87 40"},
+            {'text': "are you doing fine??", "bbox": "12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40"}]
+    query_body = "\n".join([json.dumps(d) for d in data])
+    r = requests.post(url = 'http://localhost:8080/invocations',
+                data = query_body,
+                headers = {'Content-Type': 'application/jsonlines'})
+    assert r.status_code == 200
+    result = r.json()
+    assert "predictions" in result
+    assert len(result["predictions"]) == len(data)
+    assert all(("pred" in r) for r in result["predictions"])
 
     # end process todo: SHOULD BE IN FIXTURE !!!!!
     process.terminate()

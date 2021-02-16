@@ -165,6 +165,6 @@ def test_training(args, teardown_cleaning):
     input = {'text': ['hello I am ALexis', "how are you", "are you doing fine??"],
            'bbox': ["12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40", "12 34 87 40, 12 34 87 40, 12 34 87 40",
                    "12 34 87 40, 12 34 87 40, 12 34 87 40, 12 34 87 40"]}
-    preds, probas = ScoringService.predict(OUTPUT_MODEL_DIR, input)
-    assert all(len(p) == len(text.split()) for p, text in zip(preds, input["text"]))
-    assert not probas
+    result = ScoringService.predict(OUTPUT_MODEL_DIR, input)
+    assert all(len(p) == len(text.split()) for p, text in zip(result["pred"], input["text"]))
+    assert not ("proba" in result)
