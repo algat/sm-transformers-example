@@ -77,6 +77,68 @@ You can provide SageMaker Hyperparameters to adapt the training parameters:
 | Bert, Distilbert, LayoutLM |  10 |
 | Longformer |  1 |
 
+## Usage for Serving
+
+Whether using Endpoint or Batch Transform, there are two options for the input/output data format: `application/json` and `application/jsonlines`.
+
+### Input data format
+
+* With Content-type `application/json`:
+
+You can provide one or multiple samples with this json structure:
+
+```json
+{"data":[{"text": "this is an example text"}, 
+         {"text": "how are you"},
+         {"text": "are you doing fine?"}]}
+```
+
+* With Content-type `application/jsonlines`:
+
+You can provide one or multiple samples with this jsonlines structure:
+
+```json
+{"text": "this is an example text"}\n
+{"text": "how are you"}\n
+{"text": "are you doing fine?"}
+```
+
+### Ouput data format
+
+* With Accept `application/json`, the response will be:
+
+```json
+{"predictions": [{"pred": "tech", "proba": 0.553991973400116}, 
+                 {"pred": "tech", "proba": 0.3334293067455292}, 
+                 {"pred": "tech", "proba": 0.5057740211486816}]}
+```
+
+* With Accept `application/jsonlines`, the response will be:
+
+```json
+{"pred": "tech", "proba": 0.553991973400116}\n
+{"pred": "tech", "proba": 0.3334293067455292}\n
+{"pred": "tech", "proba": 0.5057740211486816}
+```
+
+**NB:** For Batch Transform, we recommend using `jsonlines` and/or the following strategies:
+
+| ContentType | Recommended SplitType |
+| --- | --- |
+| application/jsonlines | Line |
+| application/json | None |
+
+
+| Accept | Recommended AssembleWith |
+| --- | --- |
+| application/jsonlines | Line |
+| application/json | None |
+
+
+## Example notebook
+
+And example notebook to train/serve with SageMaker is available [here](./examples/train_model_with_sm.ipynb)
+
 ## Running tests
 
 Unit tests: 
