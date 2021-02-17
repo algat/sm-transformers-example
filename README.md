@@ -105,11 +105,11 @@ You can provide one or multiple samples with this jsonlines structure:
 
 ### Ouput data format
 
-* With Accept `application/json`, the response will be:
+* With Accept `application/json`, the response will be (for classification task):
 
 ```json
 {"predictions": [{"pred": "tech", "proba": 0.553991973400116}, 
-                 {"pred": "tech", "proba": 0.3334293067455292}, 
+                 {"pred": "politics", "proba": 0.3334293067455292}, 
                  {"pred": "tech", "proba": 0.5057740211486816}]}
 ```
 
@@ -117,7 +117,7 @@ You can provide one or multiple samples with this jsonlines structure:
 
 ```json
 {"pred": "tech", "proba": 0.553991973400116}\n
-{"pred": "tech", "proba": 0.3334293067455292}\n
+{"pred": "politics", "proba": 0.3334293067455292}\n
 {"pred": "tech", "proba": 0.5057740211486816}
 ```
 
